@@ -13,7 +13,33 @@ With the advent of short-read DNA sequencing it was simpler, faster and computat
 to perform such *ab initio* based investigation of the transcriptome. Third generation DNA sequencing
 such as Oxford Nanopore's
 [direct RNA sequencing](https://store.nanoporetech.com/eu/catalog/product/view/id/297/s/direct-rna-sequencing-kit/category/28/)
-or [cDNA sequencing](https://store.nanoporetech.com/eu/sample-prep/direct-cdna-sequencing-kit.html).
+or [cDNA sequencing](https://store.nanoporetech.com/eu/sample-prep/direct-cdna-sequencing-kit.html)
+offers the ability to sequence full-length transcripts and to fully characterise the diversity
+of transcripts and their isoforms.
+
+Earlier bioinformatics solutions such as openSputnik (4) provided schedulers for the distributed
+bioinformatics required for the annotation and analysis of sequence collections - some of these
+solutions have been lost to time. There is certainly an [
+over-abundance of tools](https://en.wikipedia.org/wiki/List_of_RNA-Seq_bioinformatics_tools) for
+analysing RNA-Seq data - nothing really jumps out as a solution for the exploration of
+full-length cDNA sequence data in the absence of reference genome sequences ... this is where we are 
+starting.
+
+With the development of fabulous workflow software such as 
+[Snakemake](https://snakemake.readthedocs.io/en/stable/) and [Nextflow](https://www.nextflow.io/)
+some of the scheduling requirements are already very much more capable than workflows provided in
+the past.
+
+## Ambitions for gwangmyeongseong3?
+
+* To facilitate the ab initio annotation and analysis of full-length cDNA sequence data
+* To leverage existing workflow / pipeline software
+* To re-utilise RDBMS software for the structured storage and curation of biological data
+* To provide coherent and dynamic reporting of the experimental and annotative data
+* To be completely open and reproducible
+* To utilise Tidyverse compliant R in so far as is possible throughout
+* To (finally) containerise the software
+* Provision of meaningful documentation (pkgdown)
 
 ## History - from Sputnik to openSputnik
 
