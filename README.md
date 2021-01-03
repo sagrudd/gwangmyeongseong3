@@ -3,6 +3,18 @@ This a redux of the Sputnik and OpenSputnik comparative genomics projects.
 
 This is another vanity project aiming to rekindle some bioinformatics and coding passion.
 
+## Why gwangmyeongseong3?
+
+In the beginning there were Sanger-based DNA sequence reads produced from purified cDNA. A robust
+sequencing library could contain between 1000s and 100,000s of sequences that with some patience
+could be filtered, clustered and assembled into Unigene sets.
+
+With the advent of short-read DNA sequencing it was simpler, faster and computationally more scary
+to perform such *ab initio* based investigation of the transcriptome. Third generation DNA sequencing
+such as Oxford Nanopore's
+[direct RNA sequencing](https://store.nanoporetech.com/eu/catalog/product/view/id/297/s/direct-rna-sequencing-kit/category/28/)
+or [cDNA sequencing](https://store.nanoporetech.com/eu/sample-prep/direct-cdna-sequencing-kit.html).
+
 ## History - from Sputnik to openSputnik
 
 As a postdoc at the turn of the millenium, I was tasked with adapting the PEDANT software (1)
