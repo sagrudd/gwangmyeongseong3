@@ -1,0 +1,74 @@
+---
+title: "lodestar_start_guide"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{lodestar_start_guide}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(gwangmyeongseong3)
+```
+
+### Best practises and hiding passwords and usernames
+
+In this vignette we will be exploring the `Lodestar` software for sequence
+annotation and comparative genomics. In the canonical code examples included
+we will be connecting to a database server that uses a username and password
+that I would prefer not to be shown in a public-facing technical document. We
+will therefore have a quick introduction to the 
+[r-lib/keyring](https://github.com/r-lib/keyring) software.
+
+`keyring` works out of the box on Windows and MacOS - if you are using a Linux
+computer please ensure that e.g. `libsecret-1-dev` has been installed on your
+system.
+
+
+```{r keyring_intro}
+# define the objects required for the key ...
+keychain_name <- "my_credentials"
+kr_service <- "my_service"
+kr_username <- "my_username"
+kr_password <- "topsecret"
+
+# define the key object - this will be saved in ~/.config/r-keyring
+kb <- keyring::backend_file$new()
+
+# create the keyring (this will be placed in the object above)
+kb$keyring_create(keychain_name)
+
+# and set the username, password and service parameters to be stored
+kb$set_with_value(service=kr_service, username=kr_username, password=kr_password, keyring=keychain_name)
+
+# let's see what has been saved in the keychain
+kb$keyring_is_locked(keychain_name)
+kb$keyring_list()
+kb$list(keyring = keychain_name, service=kr_service)
+
+# and show how the password can be extracted again ...
+kb$get(keyring = keychain_name, service=kr_service, username=kr_username)
+
+# delete this keyring
+kb$keyring_delete(keychain_name)
+```
+
+
+### Using passwords in Lodestar
+
+The `Lodestar` package provides a simple method to set the passwords that will
+be used for connecting to one or more databases.
+
+```{r lodestar_creds} 
+creds <- lodestar_creds(username=kr_username, password=kr_password, service=kr_service, keyring=keychain_name)
+creds$list(keyring = keychain_name, service=kr_service)
+```
+
+
