@@ -3,6 +3,9 @@ This a redux of the Sputnik and OpenSputnik comparative genomics projects.
 
 This is another vanity project aiming to rekindle some bioinformatics and coding passion.
 
+There is a documentation bundle available at 
+[https://sagrudd.github.io/gwangmyeongseong3/](https://sagrudd.github.io/gwangmyeongseong3/)
+
 ## Why gwangmyeongseong3?
 
 In the beginning there were Sanger-based DNA sequence reads produced from purified cDNA. A robust
