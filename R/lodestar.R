@@ -3,6 +3,7 @@
 .default_keyring = "lodestar"
 
 
+
 #' R6 Class for abstracting database connections and maintaining lodestar schema
 #'
 #' @description
@@ -38,21 +39,25 @@ LodestarConn <- R6::R6Class(
     #' @param username the user account to be used with the database - NA by
     #' default; in simpler installations the software will identify the username
     #' on basis of e.g. service
+    #' @param password the password to connect to the database with; using the
+    #' backend object this can be read from the keyring
     #' @param silent boolean defining whether logging of process should be
     #' performed (TRUE by default)
     #' @return the LodestarConn R6 object
     #'
-    initialize = function(backend=NA, keyring=.default_keyring, service=.default_service, username=NA, silent=FALSE) {
+    initialize = function(backend=NA, keyring=.default_keyring, service=.default_service, username=NA, password=NA, port=5432, silent=FALSE) {
       if (is.na(backend)) {
-        if (!silent) message(paste0("using keyring settings for LodestarConn"))
         private$.backend = keyring::backend_file$new()
       } else {
         private$.backend = backend
       }
-      private$.keyring = keyring
-      private$.service = service
-      private$.silent = silent
-      private$.username = username
+      private$.keyring <- keyring
+      private$.service <- service
+      private$.silent <- silent
+      private$.username <- username
+      private$.password <- password
+      private$.port <- as.integer(port)
+
       private$.check_backend()
       invisible()
     },
@@ -66,9 +71,27 @@ LodestarConn <- R6::R6Class(
         RPostgres::Postgres(),
         dbname = private$.service,
         host="localhost",
-        port=5432,
+        port=private$.port,
         user=private$.username,
         password=private$.password)
+    },
+
+    #' @description
+    #' export the key characteristics of this object in a format for writing
+    #' to YAML to allow the propagation of settings in a cluster environment
+    #' where we cannot expect processes to have access to the keyring - this
+    #' does mean that connection strings and passwords are written to file ...
+    #' this will be addressed more securely once we're beyond the proof-of-
+    #' concept.
+    as_yaml = function() {
+      return(
+        list(
+          username=private$.username,
+          password=private$.password,
+          rdbms=private$.keyring,
+          database=private$.service,
+          port=private$.port
+        ))
     }
   ),
 
@@ -79,55 +102,69 @@ LodestarConn <- R6::R6Class(
     .username = NA,
     .silent = NA,
     .password = NA,
+    .port = NA,
 
     .check_backend = function() {
       classes <- class(private$.backend)
       if (!all(c("backend", "R6") %in% classes)) {
-        stop("Is the provided object really a keyring backend?")
+        cli::cli_alert_danger("Is the provided object really a keyring backend?")
+        silent_stop()
       }
+
+      if (!is.na(private$.username) & !is.na(private$.password)) {
+        cli::cli_alert("using provided [user:pass] information")
+        return(invisible())
+      }
+
       key_rings <- as.vector(unlist(private$.backend$keyring_list()[1]))
 
       if (!private$.keyring %in% key_rings) {
         if (private$.keyring == .default_keyring) {
-          stop("Have you defined your Lodestar users?")
+          cli::cli_alert_danger("Have you defined your Lodestar users?")
+          silent_stop()
         }
-        stop(paste0("keyring [",private$.keyring,"] not found in backend keyset"))
+        cli::cli_alert_danger(paste0("keyring [",private$.keyring,"] not found in backend keyset"))
+        silent_stop()
       } else {
-        if (!private$.silent) message(paste0("using [",private$.keyring,"] as session keyset"))
+        cli::cli_alert(paste0("using [",private$.keyring,"] as session keyset"))
       }
 
       tib <- tibble::as_tibble(private$.backend$list(keyring=private$.keyring))
 
       if (is.na(private$.username)) {
-        if (!private$.silent) message(paste0("trying to pick a suitable username"))
         if (!private$.service %in% tib$service) {
-          stop(paste0("service [",private$.service,"] is not present in keyring"))
+          cli::cli_alert_danger(paste0("service [",private$.service,"] is not present in keyring"))
+          silent_stop()
         }
         tib <- tib %>% dplyr::filter(service==private$.service)
         if (length(unique(tib$username))>1) {
-          stop(paste0(
+          cli::cli_alert_danger(paste0(
             "username is ambiguous with [",length(unique(tib$username)),
-            "] possibilities\n", paste0("[", paste(c("stephen", "kevin"), collapse="], ["), "]")))
+            "] possibilities\n", paste0("[", paste(unique(tib$username), collapse="], ["), "]")))
+          stop()
         } else if (length(unique(tib$username))==0) {
-          stop(paste0("There do not appear to be any suitable candidate usernames"))
+          unique(tib$username)(paste0("There do not appear to be any suitable candidate usernames"))
         } else if (length(unique(tib$username)) == 1) {
           private$.username <- unique(tib$username)[1]
-          if (!private$.silent) message(paste0("using [",private$.username,"] as a username"))
+          cli::cli_alert_success(paste0("using [",private$.username,"] as a username"))
         }
       } else {
         if (!private$.username %in% tib$username) {
-          stop(paste0("username [",private$.username,"] is not present in keyring"))
+          cli::cli_alert_danger(paste0("username [",private$.username,"] is not present in keyring"))
+          silent_stop()
         } else if (!private$.service %in% tib$service) {
-          stop(paste0("service [",private$.service,"] is not present in keyring"))
+          cli::cli_alert_danger(paste0("service [",private$.service,"] is not present in keyring"))
+          silent_stop()
         }
         tib <- tib %>% dplyr::filter(service==private$.service) %>% dplyr::filter(username==private$.username)
         if (length(unique(tib$username))==0) {
-          stop(paste0("No candidate entries for [sevice=",private$.service,", username=",private$.username,"]"))
+          cli::cli_alert_danger(paste0("No candidate entries for [sevice=",private$.service,", username=",private$.username,"]"))
+          silent_stop()
         }
       }
 
       private$.password <- private$.backend$get(keyring = private$.keyring, service=private$.service, username=private$.username)
-      if (!private$.silent) message(paste0("password [","*****","] recovered"))
+      cli::cli_alert_success(paste0("password [","*****","] recovered"))
 
     }
   )

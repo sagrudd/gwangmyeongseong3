@@ -23,52 +23,58 @@ library(gwangmyeongseong3)
 In this vignette we will be exploring the `Lodestar` software for sequence
 annotation and comparative genomics. In the canonical code examples included
 we will be connecting to a database server that uses a username and password
-that I would prefer not to be shown in a public-facing technical document. We
-will therefore have a quick introduction to the 
-[r-lib/keyring](https://github.com/r-lib/keyring) software.
+that I would prefer not to be shown in a public-facing technical document. 
 
-`keyring` works out of the box on Windows and MacOS - if you are using a Linux
+The `Lodestar` software uses the [r-lib/keyring](https://github.com/r-lib/keyring) 
+package to cache and encrypt username::password pairs that are associated with
+a given RDBMS and database instance. 
+
+The`keyring` works out of the box on Windows and MacOS - if you are using a Linux
 computer please ensure that e.g. `libsecret-1-dev` has been installed on your
 system.
 
 
-```{r keyring_intro}
+```{r keyring_intro, message=FALSE}
 # define the objects required for the key ...
-keychain_name <- "my_credentials"
-kr_service <- "my_service"
-kr_username <- "my_username"
-kr_password <- "topsecret"
+RDBMS <- "dummy_psql" 
+database <- "lodestar_drosophila"
+username <- "dr_evil"
+password <- "topsecret"
 
 # define the key object - this will be saved in ~/.config/r-keyring
-kb <- keyring::backend_file$new()
-
-# create the keyring (this will be placed in the object above)
-kb$keyring_create(keychain_name)
-
-# and set the username, password and service parameters to be stored
-kb$set_with_value(service=kr_service, username=kr_username, password=kr_password, keyring=keychain_name)
+creds <- lodestar_creds(
+  username=username, password=password, 
+  service=database, keyring=RDBMS)
 
 # let's see what has been saved in the keychain
-kb$keyring_is_locked(keychain_name)
-kb$keyring_list()
-kb$list(keyring = keychain_name, service=kr_service)
+creds$keyring_is_locked(RDBMS)
+creds$list(keyring = RDBMS, service=database)
 
 # and show how the password can be extracted again ...
-kb$get(keyring = keychain_name, service=kr_service, username=kr_username)
+creds$get(keyring = RDBMS, service=database, username=username)
 
 # delete this keyring
-kb$keyring_delete(keychain_name)
+creds$keyring_delete(RDBMS)
 ```
 
+Users working with simple installations should only need to define a simple
+`lodestar_creds` configuration once; other steps within this *Vignette* will
+automatically pick up these config facets.
 
-### Using passwords in Lodestar
+## Connecting to a PostgreSQL database server
 
-The `Lodestar` package provides a simple method to set the passwords that will
-be used for connecting to one or more databases.
+On this development and documentation server, I am running a `Postgres` server.
+The installation defines a user, *`stephen`* who with the appropriate password
+is allowed to connect to an exemplar database called *`lodestar`*.
 
-```{r lodestar_creds} 
-creds <- lodestar_creds(username=kr_username, password=kr_password, service=kr_service, keyring=keychain_name)
-creds$list(keyring = keychain_name, service=kr_service)
+```{r dbconnecion, message=FALSE}
+lsconn <- LodestarConn$new()
+conn <- lsconn$connection()
+print(conn)
+
 ```
 
-
+```{r cli_demo}
+clist = c("a", "b", "c")
+cli::cli_alert_success("Downloaded {length(clist)} packages")
+```

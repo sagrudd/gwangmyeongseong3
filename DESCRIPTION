@@ -24,4 +24,7 @@ Imports:
     keyring,
     dbplyr,
     DBI,
-    RPostgres
+    RPostgres,
+    cli,
+    optparse,
+    yaml

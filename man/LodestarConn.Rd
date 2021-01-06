@@ -31,6 +31,7 @@ and tractable
   keyring = .default_keyring,
   service = .default_service,
   username = NA,
+  password = NA,
   silent = FALSE
 )}\if{html}{\out{</div>}}
 }
@@ -55,6 +56,9 @@ default.}
 \item{\code{username}}{the user account to be used with the database - NA by
 default; in simpler installations the software will identify the username
 on basis of e.g. service}
+
+\item{\code{password}}{the password to connect to the database with; using the
+backend object this can be read from the keyring}
 
 \item{\code{silent}}{boolean defining whether logging of process should be
 performed (TRUE by default)}
