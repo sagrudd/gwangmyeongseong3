@@ -1,20 +1,26 @@
 
 #' @importFrom cli cli_alert_success
+#' @export
 LodestarDaemon <- R6::R6Class(
   "LodestarDaemon",
   public = list(
-    initialize = function(daemon_port=8888) {
+    initialize = function(daemon_port=8888, key=cyphr::key_openssl( openssl::aes_keygen())) {
       private$.daemon_port = as.integer(daemon_port)
-      private$.daemon_key = "mykey"
       # start the daemon
-      private$daemon_start()
+      private$daemon_start(key)
+      Sys.sleep(1.5)
       private$.con <- socketConnection(
         host = "localhost", port = private$.daemon_port, blocking = FALSE)
-      #svSocket::evalServer(private$.con, 'lodestar <- gwangmyeongseong3::LodestarInstance$new()')
+      private$set_key(key)
 
-      lodestar_creation_string = sprintf("lodestar <- gwangmyeongseong3::LodestarInstance$new()\n")
-
+      coded <- convertRaw(cyphr::encrypt_string(.challenge_string, key))
+      lodestar_creation_string <- stringr::str_interp(
+        'lodestar <- gwangmyeongseong3::LodestarInstance$new(challenge="${coded}")\n')
+      print(lodestar_creation_string)
       cat(lodestar_creation_string, file = private$.con)
+      Sys.sleep(1.5)
+      print(svSocket::evalServer(private$.con, 'ls()'))
+      #svSocket::evalServer(private$.con, secret, coded)
     },
 
 
@@ -48,7 +54,7 @@ LodestarDaemon <- R6::R6Class(
     .daemon_key = NA,
     .con = NA,
 
-    daemon_start = function() {
+    daemon_start = function(key) {
       cli::cli_h1("starting lodestar daemon")
       suppressWarnings(svSocket::startSocketServer(private$.daemon_port))
       cli::cli_alert_success(
@@ -56,8 +62,14 @@ LodestarDaemon <- R6::R6Class(
           "daemon running on port [",
           private$.daemon_port,
           "] with key [",
-          private$.daemon_key,"]"))
+          toString(key$key()),"]"))
       private$.is_running <- TRUE
+    },
+
+
+    set_key = function(key, file="key.rds") {
+      cli::cli_alert(stringr::str_interp("saving one time key to [${file}]"))
+      saveRDS(key2str(key), file)
     }
 
   )

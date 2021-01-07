@@ -27,4 +27,6 @@ Imports:
     RPostgres,
     cli,
     optparse,
-    yaml
+    yaml,
+    stringr,
+    openssl
