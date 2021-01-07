@@ -14,6 +14,7 @@ preparation of examples and documentation in the vignettes.
 \itemize{
 \item \href{#method-new}{\code{LodestarConn$new()}}
 \item \href{#method-connection}{\code{LodestarConn$connection()}}
+\item \href{#method-as_yaml}{\code{LodestarConn$as_yaml()}}
 \item \href{#method-clone}{\code{LodestarConn$clone()}}
 }
 }
@@ -32,6 +33,7 @@ and tractable
   service = .default_service,
   username = NA,
   password = NA,
+  port = 5432,
   silent = FALSE
 )}\if{html}{\out{</div>}}
 }
@@ -81,6 +83,21 @@ Get a database connection corresponding to the passed parameters
 \subsection{Returns}{
 a DBI connection object
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-as_yaml"></a>}}
+\if{latex}{\out{\hypertarget{method-as_yaml}{}}}
+\subsection{Method \code{as_yaml()}}{
+export the key characteristics of this object in a format for writing
+to YAML to allow the propagation of settings in a cluster environment
+where we cannot expect processes to have access to the keyring - this
+does mean that connection strings and passwords are written to file ...
+this will be addressed more securely once we're beyond the proof-of-
+concept.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{LodestarConn$as_yaml()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}

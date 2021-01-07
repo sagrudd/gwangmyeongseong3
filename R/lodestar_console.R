@@ -1,6 +1,7 @@
 
-.config2yaml = "config2yaml"
+#.config2yaml = "config2yaml"
 .lodestarupload = "upload"
+.lodestardaemon = "daemon"
 
 
 #' Lodestar controller - for calling from Rscript
@@ -22,7 +23,7 @@
 #' @export
 lodestar = function() {
   cli::cli_alert_success("Welcome to lodestar annotator")
-  tasks = c(.config2yaml, .lodestarupload)
+  tasks = c(.lodestarupload, .lodestardaemon)
 
   option_list = list(
     optparse::make_option(
@@ -61,27 +62,27 @@ lodestar = function() {
     optparse::print_help(opt_parser)
     cli::cli_alert_danger(paste0("[",opt$activity,"] is not a defined activity"))
     silent_stop()
-  } else if (opt$activity == .config2yaml) {
-    lodestar_make_yaml(opt)
   } else if (opt$activity == .lodestarupload) {
     lodestar_upload(opt)
+  } else if (opt$activity == .lodestardaemon) {
+    lodestar_daemon(opt)
   } else {
     cli::cli_alert_danger("method definition not yet implemented ...")
   }
 }
 
-#' @importFrom yaml write_yaml
-lodestar_make_yaml = function(opt) {
-  cli::cli_h1("creating YAML config file")
-  cli::cli_alert_info(paste0("using [",opt$config,"] as YAML destination"))
-  lsc <- LodestarConn$new(
-    keyring=opt$rdbms,
-    service=opt$database,
-    username=opt$username,
-    password=opt$password)
-  yaml::write_yaml(lsc$as_yaml(), opt$config)
-  cli::cli_alert_success(paste0("[",opt$config,"] written successfully"))
-}
+#' #' @importFrom yaml write_yaml
+#' lodestar_make_yaml = function(opt) {
+#'   cli::cli_h1("creating YAML config file")
+#'   cli::cli_alert_info(paste0("using [",opt$config,"] as YAML destination"))
+#'   lsc <- LodestarConn$new(
+#'     keyring=opt$rdbms,
+#'     service=opt$database,
+#'     username=opt$username,
+#'     password=opt$password)
+#'   yaml::write_yaml(lsc$as_yaml(), opt$config)
+#'   cli::cli_alert_success(paste0("[",opt$config,"] written successfully"))
+#' }
 
 
 lodestar_upload = function(opt) {
@@ -93,5 +94,21 @@ lodestar_upload = function(opt) {
   }
   config <- yaml::yaml.load_file(opt$config)
   print(config)
-
 }
+
+
+lodestar_daemon = function(opt) {
+
+  ldaemon <- LodestarDaemon$new()
+  cli::cli_alert("Press ctrl-c to stop lodestar daemon")
+
+  tryCatch(
+    while (ldaemon$is_running()) {
+      Sys.sleep(0.5)
+      cat(paste0("\r",ldaemon$daemon_status()))
+    },
+    interrupt = ldaemon$daemon_stop,
+    finally = ldaemon$daemon_stop()
+  )
+}
+
