@@ -11,7 +11,10 @@ LodestarDaemon <- R6::R6Class(
       private$.con <- socketConnection(
         host = "localhost", port = private$.daemon_port, blocking = FALSE)
       #svSocket::evalServer(private$.con, 'lodestar <- gwangmyeongseong3::LodestarInstance$new()')
-      cat('lodestar <- gwangmyeongseong3::LodestarInstance$new()\n', file = private$.con)
+
+      lodestar_creation_string = sprintf("lodestar <- gwangmyeongseong3::LodestarInstance$new()\n")
+
+      cat(lodestar_creation_string, file = private$.con)
     },
 
 
