@@ -14,7 +14,10 @@ preparation of examples and documentation in the vignettes.
 \itemize{
 \item \href{#method-new}{\code{LodestarConn$new()}}
 \item \href{#method-connection}{\code{LodestarConn$connection()}}
-\item \href{#method-as_yaml}{\code{LodestarConn$as_yaml()}}
+\item \href{#method-as_list}{\code{LodestarConn$as_list()}}
+\item \href{#method-list_tables}{\code{LodestarConn$list_tables()}}
+\item \href{#method-drop_table}{\code{LodestarConn$drop_table()}}
+\item \href{#method-fastx_upload}{\code{LodestarConn$fastx_upload()}}
 \item \href{#method-clone}{\code{LodestarConn$clone()}}
 }
 }
@@ -85,9 +88,9 @@ a DBI connection object
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-as_yaml"></a>}}
-\if{latex}{\out{\hypertarget{method-as_yaml}{}}}
-\subsection{Method \code{as_yaml()}}{
+\if{html}{\out{<a id="method-as_list"></a>}}
+\if{latex}{\out{\hypertarget{method-as_list}{}}}
+\subsection{Method \code{as_list()}}{
 export the key characteristics of this object in a format for writing
 to YAML to allow the propagation of settings in a cluster environment
 where we cannot expect processes to have access to the keyring - this
@@ -95,7 +98,34 @@ does mean that connection strings and passwords are written to file ...
 this will be addressed more securely once we're beyond the proof-of-
 concept.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{LodestarConn$as_yaml()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{LodestarConn$as_list()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-list_tables"></a>}}
+\if{latex}{\out{\hypertarget{method-list_tables}{}}}
+\subsection{Method \code{list_tables()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{LodestarConn$list_tables(schema = "public")}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-drop_table"></a>}}
+\if{latex}{\out{\hypertarget{method-drop_table}{}}}
+\subsection{Method \code{drop_table()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{LodestarConn$drop_table(table)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-fastx_upload"></a>}}
+\if{latex}{\out{\hypertarget{method-fastx_upload}{}}}
+\subsection{Method \code{fastx_upload()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{LodestarConn$fastx_upload(dna, table = "cluster_fasta", fastx = "fasta")}\if{html}{\out{</div>}}
 }
 
 }

@@ -29,4 +29,5 @@ Imports:
     optparse,
     yaml,
     stringr,
-    openssl
+    openssl,
+    floundeR

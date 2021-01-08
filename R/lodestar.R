@@ -121,18 +121,17 @@ LodestarConn <- R6::R6Class(
 
     fastx_upload = function(dna, table="cluster_fasta", fastx="fasta") {
 
-      if ("DNAStringSet" %in% class(dna)) {
+      if ("tbl_df" %in% class(dna)) {
         conn <- self$connection()
-        count <- length(dna)
+        count <- nrow(dna)
         cli::cli_alert(stringr::str_interp("importing [${count}] sequences into sequence table [${table}]"))
-        dna_tib <- tibble::tibble(accession=names(dna), width=dna@ranges@width, sequence=unlist(as.character(dna)))
-        DBI::dbWriteTable(conn, table, dna_tib,
+        DBI::dbWriteTable(conn, table, dna,
                           row.names=FALSE, append=TRUE, field.types=NULL, copy=TRUE)
         DBI::dbDisconnect(conn)
         cli::cli_alert_success("database transaction complete")
       } else {
         cli::cli_div(theme = list(span.emph = list(color = "orange")))
-        cli::cli_alert_warning("{.emph fastx_upload} requires a {.emph DNAStringSet} object - upload failed")
+        cli::cli_alert_warning("{.emph fastx_upload} requires a tibbled {.emph DNAStringSet} object - upload failed")
       }
     }
 

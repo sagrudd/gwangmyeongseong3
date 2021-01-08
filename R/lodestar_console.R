@@ -56,7 +56,16 @@ lodestar = function() {
       help="RDBMS connection [default=%default]", metavar="character"),
     optparse::make_option(
       c("-u", "--username"), type="character", default=NA,
-      help="username [default=%default]", metavar="character")
+      help="username [default=%default]", metavar="character"),
+    optparse::make_option(
+      "--sequence_type", type="character", default=NULL,
+      help="sequence_type [fasta|fastq] [default=%default]", metavar="character"),
+    optparse::make_option(
+      "--upload", type="character", default=NULL,
+      help="sequence file to upload [default=%default]", metavar="character"),
+    optparse::make_option(
+      "--table_name", type="character", default=NULL,
+      help="sequence file to upload [default=%default]", metavar="character")
   );
 
   opt_parser = optparse::OptionParser(option_list=option_list);
@@ -94,24 +103,53 @@ lodestar = function() {
 
 
 lodestar_upload = function(opt) {
+  print(opt)
+  print(opt$sequence_type)
+  print(class(opt$sequence_type))
+  print(is.na(opt$sequence_type))
   cli::cli_h1("uploading bulk fastx to lodestar")
-  if (!all(c(
-    file.exists(opt$config)))) {
-    cli::cli_alert_danger(paste0("config file [",opt$config,"] not found - please create"))
+ if (is.null(opt$sequence_type)) {
+    cli::cli_div(theme = list(span.emph = list(color = "orange")))
+    cli::cli_alert("Please define {.emph --sequence_type} [fasta|...]")
+    silent_stop()
+  } else if (is.null(opt$upload)) {
+    cli::cli_div(theme = list(span.emph = list(color = "orange")))
+    cli::cli_alert("Please define {.emph --upload} [file to upload]")
+    silent_stop()
+  } else if (!tolower(opt$sequence_type) %in% c("fasta")) {
+    cli::cli_div(theme = list(span.emph = list(color = "orange")))
+    cli::cli_alert("upload does not have a definition for {.emph {opt$sequence_type}} uploads")
+    silent_stop()
+  } else if (!file.exists(opt$upload)) {
+    cli::cli_div(theme = list(span.emph = list(color = "orange")))
+    cli::cli_alert("file [{.emph {basename(opt$upload)}}] not found")
+    silent_stop()
+  } else if (is.null(opt$table_name)) {
+    cli::cli_div(theme = list(span.emph = list(color = "orange")))
+    cli::cli_alert("Please define [{.emph --table_name}] for uploaded content")
     silent_stop()
   }
-  config <- yaml::yaml.load_file(opt$config)
-  print(config)
+ cli::cli_alert("Provided parameters seem in-order ...")
+
+ if (tolower(opt$sequence_type)=="fasta") {
+   manage_fasta_upload(get_lstar(opt), opt$upload, table=opt$table_name)
+ }
 }
 
 
-lodestar_daemon = function(opt) {
-
-  lsc <- LodestarConn$new(
+get_lstar = function(opt) {
+  LodestarConn$new(
     keyring=opt$rdbms,
     service=opt$database,
     username=opt$username,
     password=opt$password)
+}
+
+
+
+lodestar_daemon = function(opt) {
+
+  lsc <- get_lstar(opt)
 
   ldaemon <- LodestarDaemon$new(lsc, daemon_host=opt$daemon_host, daemon_port=opt$daemon_port)
   cli::cli_alert("Press ctrl-c to stop lodestar daemon")
@@ -125,4 +163,15 @@ lodestar_daemon = function(opt) {
     finally = ldaemon$daemon_stop()
   )
 }
+
+
+
+manage_fasta_upload = function(lstar, filehandle, table="cluster_fasta") {
+  fasta <- floundeR::Fasta$new(filehandle)
+  chunks <- fasta$sequence_chunks()
+  for (i in seq.int(chunks)) {
+    lstar$fastx_upload(fasta$get_tibble_chunk(i), table=table, fastx="fasta")
+  }
+}
+
 
