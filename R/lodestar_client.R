@@ -5,14 +5,19 @@
 LodestarClient <- R6::R6Class(
   "LodestarClient",
   public = list(
-    initialize = function(config="key.rds", server="localhost", port=8888) {
+    initialize = function(config="key.rds") {
       cli::cli_h1(paste0("Lodestar client authentication"))
+      server <- NA
+      port <- NA
       if (!file.exists(config)) {
         cli::cli_alert_danger(stringr::str_interp("Config file [${config}] not found"))
         silent_stop()
       } else {
         cli::cli_alert(stringr::str_interp("loading encryption config file [${config}]"))
-        private$.key <- readRDS(config)
+        v <- readRDS(config)
+        server <- v[1]
+        port <- v[2]
+        private$.key <- v[3]
       }
 
       tryCatch(
