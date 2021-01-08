@@ -41,6 +41,14 @@ lodestar = function() {
       c("-d", "--database"), type="character", default=.default_service,
       help="database instance [default=%default]", metavar="character"),
     optparse::make_option(
+      "--daemon_host", type="character", default="localhost",
+      help="make daemon available through hostname [default=%default]",
+      metavar="character"),
+    optparse::make_option(
+      "--daemon_port", type="character", default=8888,
+      help="make daemon available through port [default=%default]",
+      metavar="integer"),
+    optparse::make_option(
       c("-p", "--password"), type="character", default=NA,
       help="password [default=%default]", metavar="character"),
     optparse::make_option(
@@ -105,7 +113,7 @@ lodestar_daemon = function(opt) {
     username=opt$username,
     password=opt$password)
 
-  ldaemon <- LodestarDaemon$new(lsc)
+  ldaemon <- LodestarDaemon$new(lsc, daemon_host=opt$daemon_host, daemon_port=opt$daemon_port)
   cli::cli_alert("Press ctrl-c to stop lodestar daemon")
 
   tryCatch(

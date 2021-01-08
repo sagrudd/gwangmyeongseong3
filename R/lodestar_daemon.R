@@ -55,7 +55,7 @@ LodestarDaemon <- R6::R6Class(
 
     daemon_start = function(key) {
       cli::cli_h1("starting lodestar daemon")
-      suppressWarnings(svSocket::startSocketServer(private$.daemon_port))
+      suppressWarnings(svSocket::startSocketServer(private$.daemon_port, local=FALSE))
       cli::cli_alert_success(
         paste0(
           "daemon running on port [",
