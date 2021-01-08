@@ -3,10 +3,11 @@
 LodestarInstance <- R6::R6Class(
   "LodestarInstance",
   public = list(
-    initialize = function(challenge) {
+    initialize = function(challenge, connection) {
       cli::cli_h1("creating lodestar instance")
       private$stop_signal <- FALSE
       private$challenge <- challenge
+      private$connection <- connection
     },
 
     get_connection_count = function() {
@@ -18,15 +19,12 @@ LodestarInstance <- R6::R6Class(
     },
 
     validate_key = function(key) {
-      mystring = cyphr::decrypt_string(
-        gwangmyeongseong3:::convertSHex(private$challenge),
-        gwangmyeongseong3:::str2key(key))
-      if (mystring == .challenge_string) {
+
+      if (authenticate_key(key=key, encrypted=private$challenge)) {
         private$connection_count <- private$connection_count + 1
-      } else {
-        private$failed_conn_count <- private$failed_conn_count + 1
+        return(private$connection)
       }
-      return(private$connection_count)
+      return(NA)
     }
 
 
@@ -38,11 +36,11 @@ LodestarInstance <- R6::R6Class(
 
   private = list(
     challenge = NA,
+    connection = NA,
     key = NA,
     stop_signal = NA,
     sanity = NA,
     connection_count = 0,
-    failed_count = 0,
     failed_conn_count = 0
   )
 )

@@ -83,7 +83,7 @@ LodestarConn <- R6::R6Class(
     #' does mean that connection strings and passwords are written to file ...
     #' this will be addressed more securely once we're beyond the proof-of-
     #' concept.
-    as_yaml = function() {
+    as_list = function() {
       return(
         list(
           username=private$.username,

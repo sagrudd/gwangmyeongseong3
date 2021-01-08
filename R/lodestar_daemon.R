@@ -4,7 +4,7 @@
 LodestarDaemon <- R6::R6Class(
   "LodestarDaemon",
   public = list(
-    initialize = function(daemon_port=8888, key=cyphr::key_openssl( openssl::aes_keygen())) {
+    initialize = function(lodestar_conn, daemon_port=8888, key=cyphr::key_openssl( openssl::aes_keygen())) {
       private$.daemon_port = as.integer(daemon_port)
       # start the daemon
       private$daemon_start(key)
@@ -14,8 +14,9 @@ LodestarDaemon <- R6::R6Class(
       private$set_key(key)
 
       coded <- convertRaw(cyphr::encrypt_string(.challenge_string, key))
+      connection <- convertRaw(cyphr::encrypt_object(lodestar_conn$as_list(), key))
       lodestar_creation_string <- stringr::str_interp(
-        'lodestar <- gwangmyeongseong3::LodestarInstance$new(challenge="${coded}")\n')
+        'lodestar <- gwangmyeongseong3::LodestarInstance$new(challenge="${coded}", connection="${connection}")\n')
       print(lodestar_creation_string)
       cat(lodestar_creation_string, file = private$.con)
       Sys.sleep(1.5)

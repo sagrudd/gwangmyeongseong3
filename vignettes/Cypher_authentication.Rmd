@@ -1,0 +1,65 @@
+---
+title: "Cypher_authentication"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Cypher_authentication}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(gwangmyeongseong3)
+
+key <- cyphr::key_openssl( openssl::aes_keygen() )
+wrong_key <- cyphr::key_openssl( openssl::aes_keygen() )
+
+secret <- gwangmyeongseong3:::key2str(key)
+wrong_secret <- gwangmyeongseong3:::key2str(wrong_key)
+random_secret <- gwangmyeongseong3:::randString(characters=32)
+print(secret)
+
+.challenge_string <- "PQ0nt7KvRLAaFZ28fU1946Dq5l3hzVJjWdi"
+
+encrypted <- cyphr::encrypt_string(.challenge_string, key)
+print(encrypted)
+encrypted_string <-  gwangmyeongseong3:::convertRaw(encrypted)
+print(encrypted_string)
+
+random_string <- gwangmyeongseong3:::randString(characters=128)
+print(random_string)
+```
+
+What are the exceptions that we can expect to observe?
+
+```{r decryption}
+
+# this should work
+gwangmyeongseong3:::authenticate_key(key=secret, encrypted=encrypted_string)
+# here we're trying the wrong key
+gwangmyeongseong3:::authenticate_key(key=wrong_secret, encrypted=encrypted_string)
+# here we're trying something that isn't even a key
+gwangmyeongseong3:::authenticate_key(key=random_secret, encrypted=encrypted_string)
+# here we'll try a different encrypted string
+gwangmyeongseong3:::authenticate_key(key=secret, encrypted=gwangmyeongseong3:::convertRaw(cyphr::encrypt_string(.challenge_string, wrong_key)))
+# finally let's check what happens when the encrypted stuff is just a string
+gwangmyeongseong3:::authenticate_key(key=secret, encrypted=random_string, challenge=.challenge_string)
+
+gwangmyeongseong3:::authenticate_key(key=secret, encrypted=encrypted_string, challenge=random_string)
+```
+
+
+```{r package_list}
+list_enc_str <- gwangmyeongseong3:::convertRaw(
+  cyphr::encrypt_object(
+    list(password="topsecret", username="stephen", port=5432), 
+    key = key))
+print(list_enc_str)
+cyphr::decrypt_object(gwangmyeongseong3:::convertSHex(list_enc_str), key)
+```

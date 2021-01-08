@@ -99,7 +99,13 @@ lodestar_upload = function(opt) {
 
 lodestar_daemon = function(opt) {
 
-  ldaemon <- LodestarDaemon$new()
+  lsc <- LodestarConn$new(
+    keyring=opt$rdbms,
+    service=opt$database,
+    username=opt$username,
+    password=opt$password)
+
+  ldaemon <- LodestarDaemon$new(lsc)
   cli::cli_alert("Press ctrl-c to stop lodestar daemon")
 
   tryCatch(
