@@ -1,5 +1,5 @@
 
-# x=gwangmyeongseong3::LodestarClient$new()
+# x=gwangmyeongseong3::LodestarClient$new()$close()
 
 #' @export
 LodestarClient <- R6::R6Class(
@@ -13,10 +13,6 @@ LodestarClient <- R6::R6Class(
       } else {
         cli::cli_alert(stringr::str_interp("loading encryption config file [${config}]"))
         private$.key <- readRDS(config)
-        #if (!class(private$.key)=="cyphr_key") {
-        #  cli::cli_alert_danger(stringr::str_interp("config key does not appear normal"))
-        #  silent_stop()
-        #}
       }
 
       tryCatch(
@@ -36,7 +32,7 @@ LodestarClient <- R6::R6Class(
         }
       )
 
-      private$authenticate()
+      suppressWarnings(private$authenticate())
       invisible(self)
     },
 
@@ -50,30 +46,21 @@ LodestarClient <- R6::R6Class(
   private = list(
     .key = NA,
     .con = NA,
+    .sid = randString(characters=15),
+    lodestar_conn = NA,
 
     authenticate = function() {
-      print(private$.key)
-      print(svSocket::evalServer(private$.con, 'ls()'))
-      # create a fugly string ...
-      # print(svSocket::evalServer(private$.con, lodestar$secret, key2str(key)))
 
-
-      challenge_str <- stringr::str_interp(
-        'lodestar$validate_key(key="${private$.key}")')
-      print(challenge_str)
-
-      #cat(challenge_str, file = private$.con)
-      #res <- NULL
-      #while (!length(res)) {
-      #  Sys.sleep(0.01)
-      #  res <- readLines(private$.con)
-      #}
-      #cat(res, "\n")
-      #res <- svSocket::evalServer(private$.con, eval(parse(text=challenge_str)))
-      #print(res)
-
-      query <- paste0('svSocket::evalServer(private$.con,"lodestar$validate_key(key=\'',private$.key,'\')")')
-      print(eval(parse(text=query)))
+      query <- paste0('svSocket::evalServer(private$.con,"lodestar$validate_key(key=\'',private$.key,'\', sid=\'',private$.sid,'\')")')
+      response <- eval(parse(text=query))
+      if (is.na(response)) {
+        cli::cli_alert_danger("credential transfer rejected - your token may be stale")
+        silent_stop()
+      } else {
+        key <- str2key(private$.key)
+        mylist <- cyphr::decrypt_object(gwangmyeongseong3:::convertSHex(response), key)
+        LodestarConn$new(keyring=mylist$rdbms, service=mylist$database, username=mylist$username, password=mylist$password, port=mylist$port)
+      }
     }
   )
 )

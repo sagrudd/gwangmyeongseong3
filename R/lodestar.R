@@ -46,9 +46,7 @@ LodestarConn <- R6::R6Class(
     #' @return the LodestarConn R6 object
     #'
     initialize = function(backend=NA, keyring=.default_keyring, service=.default_service, username=NA, password=NA, port=5432, silent=FALSE) {
-      if (is.na(backend)) {
-        private$.backend = keyring::backend_file$new()
-      } else {
+      if (!is.na(backend)) {
         private$.backend = backend
       }
       private$.keyring <- keyring
@@ -105,15 +103,20 @@ LodestarConn <- R6::R6Class(
     .port = NA,
 
     .check_backend = function() {
-      classes <- class(private$.backend)
-      if (!all(c("backend", "R6") %in% classes)) {
-        cli::cli_alert_danger("Is the provided object really a keyring backend?")
-        silent_stop()
-      }
-
       if (!is.na(private$.username) & !is.na(private$.password)) {
         cli::cli_alert("using provided [user:pass] information")
         return(invisible())
+      }
+
+      if (is.na(private$.backend)) {
+        cli::cli_alert("creating a new backend keychain for lodestar")
+        private$.backend = keyring::backend_file$new()
+      } else {
+        classes <- class(private$.backend)
+        if (!all(c("backend", "R6") %in% classes)) {
+          cli::cli_alert_danger("Is the provided object really a keyring backend?")
+          silent_stop()
+        }
       }
 
       key_rings <- as.vector(unlist(private$.backend$keyring_list()[1]))

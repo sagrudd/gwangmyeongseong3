@@ -17,10 +17,10 @@ LodestarDaemon <- R6::R6Class(
       connection <- convertRaw(cyphr::encrypt_object(lodestar_conn$as_list(), key))
       lodestar_creation_string <- stringr::str_interp(
         'lodestar <- gwangmyeongseong3::LodestarInstance$new(challenge="${coded}", connection="${connection}")\n')
-      print(lodestar_creation_string)
+      # print(lodestar_creation_string)
       cat(lodestar_creation_string, file = private$.con)
       Sys.sleep(1.5)
-      print(svSocket::evalServer(private$.con, 'ls()'))
+      #print(svSocket::evalServer(private$.con, 'ls()'))
       #svSocket::evalServer(private$.con, secret, coded)
     },
 
@@ -38,7 +38,7 @@ LodestarDaemon <- R6::R6Class(
       return(
         paste0(
           "[",svSocket::evalServer(private$.con, 'lodestar$get_connection_count()'),
-          "] connections from [12] hosts."))
+          "] connections from [",svSocket::evalServer(private$.con, 'lodestar$get_sid_count()'),"] process(es)."))
     },
 
     is_running = function() {
