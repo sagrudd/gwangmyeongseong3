@@ -65,7 +65,7 @@ LodestarConn <- R6::R6Class(
     #'
     #' @return a DBI connection object
     connection = function() {
-      con <- DBI::dbConnect(
+      DBI::dbConnect(
         RPostgres::Postgres(),
         dbname = private$.service,
         host="localhost",
@@ -90,7 +90,52 @@ LodestarConn <- R6::R6Class(
           database=private$.service,
           port=private$.port
         ))
+    },
+
+
+    list_tables = function(schema="public") {
+      conn <- self$connection()
+      query = stringr::str_interp(
+        "select table_catalog, table_schema, table_name from information_schema.tables where table_schema='${schema}'")
+      if (!private$.silent) {
+        cli::cli_alert(query)
+      }
+      remote_tables <- DBI::dbGetQuery(conn, query)
+      DBI::dbDisconnect(conn)
+      return(tibble::as_tibble(remote_tables))
+    },
+
+
+    drop_table = function(table) {
+      conn <- self$connection()
+      query = stringr::str_interp(
+        "drop table if exists ${table}")
+      if (!private$.silent) {
+        cli::cli_alert(query)
+      }
+      response <- DBI::dbExecute(conn, query)
+      DBI::dbDisconnect(conn)
+      invisible()
+    },
+
+
+    fastx_upload = function(dna, table="cluster_fasta", fastx="fasta") {
+
+      if ("DNAStringSet" %in% class(dna)) {
+        conn <- self$connection()
+        count <- length(dna)
+        cli::cli_alert(stringr::str_interp("importing [${count}] sequences into sequence table [${table}]"))
+        dna_tib <- tibble::tibble(accession=names(dna), width=dna@ranges@width, sequence=unlist(as.character(dna)))
+        DBI::dbWriteTable(conn, table, dna_tib,
+                          row.names=FALSE, append=TRUE, field.types=NULL, copy=TRUE)
+        DBI::dbDisconnect(conn)
+        cli::cli_alert_success("database transaction complete")
+      } else {
+        cli::cli_div(theme = list(span.emph = list(color = "orange")))
+        cli::cli_alert_warning("{.emph fastx_upload} requires a {.emph DNAStringSet} object - upload failed")
+      }
     }
+
   ),
 
   private = list(

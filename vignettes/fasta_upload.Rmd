@@ -1,0 +1,70 @@
+---
+title: "fasta_upload"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{fasta_upload}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(gwangmyeongseong3)
+
+#fl = "/home/stephen/cluster_cons.fasta"
+fl <- system.file("extdata", "cluster_cons.fasta.bgz", package="gwangmyeongseong3", mustWork=TRUE)
+print(fl)
+if (grepl("(.fa$)|(.fasta$)", fl)) {
+  Rsamtools::bgzip(fl, overwrite=TRUE)
+  fl <- sprintf("%s.bgz", fl)
+  cli::cli_alert(stringr::str_interp("fasta file compressed to bzip2 format [${basename(fl)}]"))
+}
+if (!any(grepl("\\.fai$", list.files(dirname(fl), pattern=basename(fl))))) {
+  cli::cli_alert_warning(stringr::str_interp("There does not appear to be an index for [${basename(fl)}]"))
+  Rsamtools::indexFa(fl)
+} else {
+  cli::cli_alert_info(stringr::str_interp("index for [${basename(fl)}] found"))
+}
+
+
+max <- Rsamtools::countFa(fl)
+starts <- seq(from=0, to = max, by = interval)
+ends <- c(seq(from=0, to = max, by = interval)[-1], max)
+
+idx <- Rsamtools::scanFaIndex(fl)
+
+extract_fasta <- function(pointer, starts, ends) {
+  start = starts[pointer]
+  end = ends[pointer]
+  print(paste0("[",start,"-",end,"]"))
+  dna <- Rsamtools::scanFa(fl, param=idx[start:end])
+}
+
+lapply(seq.int(length(starts)), extract_fasta, starts=starts, ends=ends)
+
+fasta_index <- Rsamtools::scanFaIndex(fl)
+
+
+lstar <- LodestarConn$new()
+
+
+
+
+
+
+
+
+remote_tables <- as.character(remote_tables$table_name)
+remote_tables
+character(0)
+
+
+
+
+```
