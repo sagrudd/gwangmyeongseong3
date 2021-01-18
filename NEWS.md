@@ -1,4 +1,4 @@
-# gwangmyeongseong3 (development version)
+# gwangmyeongseong3 0.0.1
 
 # gwangmyeongseong3 0.0.0.9000
 

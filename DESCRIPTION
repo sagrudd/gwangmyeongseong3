@@ -1,6 +1,6 @@
 Package: gwangmyeongseong3
 Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9001
+Version: 0.0.1
 Authors@R: 
     person(given = "Stephen",
            family = "Rudd",
@@ -30,4 +30,5 @@ Imports:
     yaml,
     stringr,
     openssl,
-    floundeR
+    floundeR,
+    plumber
