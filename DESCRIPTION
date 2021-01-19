@@ -1,6 +1,6 @@
 Package: gwangmyeongseong3
 Title: What the Package Does (One Line, Title Case)
-Version: 0.0.1
+Version: 0.0.2
 Authors@R: 
     person(given = "Stephen",
            family = "Rudd",
@@ -31,4 +31,5 @@ Imports:
     stringr,
     openssl,
     floundeR,
-    plumber
+    plumber,
+    urltools

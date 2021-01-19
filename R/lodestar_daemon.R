@@ -4,72 +4,58 @@
 LodestarDaemon <- R6::R6Class(
   "LodestarDaemon",
   public = list(
-    initialize = function(lodestar_conn, daemon_port=8888, daemon_host="localhost", key=cyphr::key_openssl( openssl::aes_keygen())) {
-      private$.daemon_port = as.integer(daemon_port)
-      # start the daemon
-      private$daemon_start(key)
-      Sys.sleep(1.5)
-      private$.con <- socketConnection(
-        host = "localhost", port = private$.daemon_port, blocking = FALSE)
-      private$set_key(daemon_host, key)
+    initialize = function(lodestar_conn, directory="./", key=cyphr::key_openssl( openssl::aes_keygen())) {
+      private$.lstar <- lodestar_conn
+      private$.directory <- directory
+      private$set_key(key)
 
-      coded <- convertRaw(cyphr::encrypt_string(.challenge_string, key))
-      connection <- convertRaw(cyphr::encrypt_object(lodestar_conn$as_list(), key))
-      lodestar_creation_string <- stringr::str_interp(
-        'lodestar <- gwangmyeongseong3::LodestarInstance$new(challenge="${coded}", connection="${connection}")\n')
-      cat(lodestar_creation_string, file = private$.con)
-      Sys.sleep(1.5)
-      #print(svSocket::evalServer(private$.con, 'ls()'))
+      private$.challenge <- convertRaw(cyphr::encrypt_string(.challenge_string, key))
+      private$.connection <- convertRaw(cyphr::encrypt_object(private$.lstar$as_list(), key))
+
     },
 
-
-    daemon_stop = function(e) {
-      if (private$.is_running) {
-        cli::cli_h1("stopping lodestar daemon")
-        suppressWarnings(svSocket::stopSocketServer(private$.daemon_port))
-        cli::cli_alert_success("Goodbye")
-        private$.is_running <- FALSE
+    authenticate = function(key, sid) {
+      self$touch()
+      if (!sid %in% private$.unique_hosts) {
+        private$.unique_hosts <- append(private$.unique_hosts, sid)
       }
+
+      if (authenticate_key(key=key, encrypted=private$.challenge)) {
+        cli::cli_alert_success("key validated")
+        return(private$.connection)
+      }
+      # cli::cli_alert_danger("incompatible password key provided") logging elsewhere
+      private$failed_conn_count <- private$failed_conn_count + 1
+      return(NA)
     },
 
-    daemon_status = function() {
-      return(
-        paste0(
-          "[",svSocket::evalServer(private$.con, 'lodestar$get_connection_count()'),
-          "] connections from [",svSocket::evalServer(private$.con, 'lodestar$get_sid_count()'),"] process(es)."))
+    status = function() {
+      cli::cli_alert_info(
+        stringr::str_interp(
+          "[${private$connection_count}] connections from [${length(private$.unique_hosts)}] process(es)."))
     },
 
-    is_running = function() {
-      return(TRUE)
-        # private$.is_running &
-        #   !svSocket::evalServer(private$.con, 'lodestar$stop_request_received()'))
+    touch = function() {
+      private$connection_count <- private$connection_count + 1
     }
 
   ),
 
   private = list(
-    .is_running = NA,
-    .daemon_port = NA,
-    .daemon_key = NA,
-    .con = NA,
-
-    daemon_start = function(key) {
-      cli::cli_h1("starting lodestar daemon")
-      suppressWarnings(svSocket::startSocketServer(private$.daemon_port, local=FALSE))
-      cli::cli_alert_success(
-        paste0(
-          "daemon running on port [",
-          private$.daemon_port,
-          "] with key [",
-          toString(key$key()),"]"))
-      private$.is_running <- TRUE
-    },
+    .lstar = NA,
+    .directory = NA,
+    .challenge = NA,
+    .connection = NA,
+    .unique_hosts = list(),
+    connection_count = 0,
+    failed_conn_count = 0,
 
 
-    set_key = function(host, key, file="key.rds") {
-      v <- c(host, private$.daemon_port, key2str(key))
-      cli::cli_alert(stringr::str_interp("saving one time key to [${file}]"))
-      saveRDS(v, file)
+    set_key = function(key, file="key.rds") {
+      dest <- file.path(private$.directory, file)
+      v <- c(key2str(key))
+      cli::cli_alert(stringr::str_interp("saving session key to [${dest}]"))
+      saveRDS(v, dest)
     }
 
   )

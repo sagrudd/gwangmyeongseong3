@@ -1,8 +1,9 @@
 
 
-silent_stop <- function() {
+silent_stop <- function(message="") {
   opt <- options(show.error.messages = FALSE)
   on.exit(options(opt))
+  cli::cli_alert_danger(message)
   stop("\r ", call.=FALSE)
 }
 
@@ -63,7 +64,7 @@ authenticate_key <- function(key, encrypted, challenge=.challenge_string) {
     },
     finally = {
       if (!is.na(mystring)) {
-        cli::cli_alert_info(mystring)
+        # cli::cli_alert_info(mystring) # don't need to echo key ...
         if (mystring == challenge) {
           return(TRUE)
         }

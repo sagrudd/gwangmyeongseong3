@@ -3,7 +3,6 @@
 export(LodestarClient)
 export(LodestarConn)
 export(LodestarDaemon)
-export(LodestarInstance)
 export(lodestar)
 export(lodestar_creds)
 export(lodestar_user_tibble)
